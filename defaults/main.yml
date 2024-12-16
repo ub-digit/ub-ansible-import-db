@@ -1,0 +1,3 @@
+database_variant: 'postgres'
+db_dump_filename: 'database.sql'
+db_service: db
