@@ -20,8 +20,28 @@
 
 - name: Set database command
   ansible.builtin.set_fact:
-    db_command: "psql {{ db_name }} {{ db_user }}"
+    db_command: "psql -U {{ db_user }} -d {{ db_name }}"
   when: database_variant == 'postgres'
+
+- name: Set drop database command
+  ansible.builtin.set_fact:
+    db_drop_command: "psql -U {{ db_user }} -d postgres -c \"DROP DATABASE IF EXISTS $POSTGRES_DB;\""
+  when: database_variant == 'postgres'
+
+- name: Set create database command
+  ansible.builtin.set_fact:
+    db_create_command: "psql -U {{ db_user }} -d postgres -c \"CREATE DATABSE $POSTGRES_DB;\""
+  when: database_variant == 'postgres'
+
+- name: Drop database if exists
+  ansible.builtin.shell:
+    chdir: '{{ docker_directory_path }}'
+    cmd: "{{ docker_command }} exec {{ db_service }} bash -c '{{ db_drop_command }}'"
+
+- name: Create database
+  ansible.builtin.shell:
+    chdir: '{{ docker_directory_path }}'
+    cmd: "{{ docker_command }} exec {{ db_service }} bash -c '{{ db_create_command }}'"
 
 - name: Import database
   ansible.builtin.shell:
