@@ -13,25 +13,44 @@
     db_user: "{{ db_user | default(default_database_vars.db_user) }}"
     db_name: "{{ db_name | default(default_database_vars.db_name) }}"
 
+- name: Set mysql specific variables
+  ansible.builtin.set_fact:
+    db_password: "{{ db_password | default(default_database_vars.db_password) }}"
+
 - name: Upload database
   ansible.builtin.copy:
     src: "{{ [playbook_dir, 'data', db_dump_filename] | path_join }}"
     dest: "{{ [docker_directory_path, db_dump_filename] | path_join }}"
 
-- name: Set database command
+- name: Set mysql database command
   ansible.builtin.set_fact:
     db_command: "psql -U {{ db_user }} -d {{ db_name }}"
   when: database_variant == 'postgres'
 
-- name: Set drop database command
+- name: Set postgres database command
+  ansible.builtin.set_fact:
+    db_command: "mysql -u {{ db_user }} -p{{ db_password }} {{ db_name }}"
+  when: database_variant == 'mysql'
+
+- name: Set postgres drop database command
   ansible.builtin.set_fact:
     db_drop_command: "psql -U {{ db_user }} -d postgres -c \"DROP DATABASE IF EXISTS $POSTGRES_DB;\""
   when: database_variant == 'postgres'
 
-- name: Set create database command
+- name: Set postgres create database command
   ansible.builtin.set_fact:
     db_create_command: "psql -U {{ db_user }} -d postgres -c \"CREATE DATABSE $POSTGRES_DB;\""
   when: database_variant == 'postgres'
+
+- name: Set mysql drop database command
+  ansible.builtin.set_fact:
+    db_drop_command: "mysql -u {{ db_user }} -p{{ db_password }} -e \"DROP DATABASE IF EXISTS $MYSQL_DATABASE;\""
+  when: database_variant == 'mysql'
+
+- name: Set mysql create database command
+  ansible.builtin.set_fact:
+    db_create_command: "mysql -u {{ db_user }} -p{{ db_password }} -e \"CREATE DATABASE $MYSQL_DATABASE;\""
+  when: database_variant == 'mysql'
 
 - name: Drop database if exists
   ansible.builtin.shell:
@@ -46,4 +65,4 @@
 - name: Import database
   ansible.builtin.shell:
     chdir: '{{ docker_directory_path }}'
-    cmd: "{{ docker_command }} exec {{ db_service }} bash -c '{{ db_command }}' < {{ db_dump_filename }}"
+    cmd: "{{ docker_command }} exec -T {{ db_service }} bash -c '{{ db_command }}' < {{ db_dump_filename }}"
