@@ -1,6 +1,8 @@
 ---
-- name: Load database specific variables
-  include_vars: "{{ lookup('first_found', params) }}"
+- name: Load database specific default variables
+  include_vars:
+    file: "{{ lookup('first_found', params) }}"
+    name: default_database_vars
   vars:
     params:
       files:
