@@ -6,7 +6,7 @@ galaxy_info:
   license: "license (BSD, MIT)"
   min_ansible_version: 2.4
 dependencies:
-  - role: ub-ansible-deploy
+  - name: ub-ansible-deploy
     src: https://github.com/ub-digit/ub-ansible-deploy.git
     version: master
     vars:
