@@ -1,3 +1,4 @@
 ---
 db_user: '$POSTGRES_USER'
 db_name: '$POSTGRES_DB'
+db_password: '$POSTGRES_PASSWORD'

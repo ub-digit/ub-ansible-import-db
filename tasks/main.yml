@@ -1,4 +1,16 @@
 ---
+- name: Ensure database service is started
+  ansible.builtin.command: "{{ docker_command }} up {{ db_service }} -d"
+  args:
+    chdir: '{{ docker_directory_path }}'
+
+- name: Get db service container id
+  ansible.builtin.command: docker compose ps -q {{ db_service }}
+  args:
+    chdir: "{{ docker_directory_path }}"
+  register: db_service_id
+  changed_when: false
+
 - name: Load database specific default variables
   include_vars:
     file: "{{ lookup('first_found', params) }}"
@@ -41,7 +53,7 @@
 
 - name: Set postgres create database command
   ansible.builtin.set_fact:
-    db_create_command: "psql -U {{ db_user }} -d postgres -c \"CREATE DATABSE $POSTGRES_DB;\""
+    db_create_command: "psql -U {{ db_user }} -d postgres -c \"CREATE DATABASE $POSTGRES_DB;\""
   when: database_variant == 'postgres'
 
 - name: Set mysql drop database command
@@ -54,17 +66,26 @@
     db_create_command: "mysql -u {{ db_user }} -p{{ db_password }} -e \"CREATE DATABASE $MYSQL_DATABASE;\""
   when: database_variant == 'mysql'
 
+- name: Wait for DB container to be healthy
+  ansible.builtin.shell: |
+    docker inspect --format='{% raw %}{{ .State.Health.Status }}{% endraw %}' {{ db_service_id.stdout }}
+  register: health
+  until: health.stdout == "healthy"
+  retries: 3
+  delay: 2
+  changed_when: false
+
 - name: Drop database if exists
   ansible.builtin.shell:
-    chdir: '{{ docker_directory_path }}'
     cmd: "{{ docker_command }} exec {{ db_service }} bash -c '{{ db_drop_command }}'"
+    chdir: '{{ docker_directory_path }}'
 
 - name: Create database
   ansible.builtin.shell:
-    chdir: '{{ docker_directory_path }}'
     cmd: "{{ docker_command }} exec {{ db_service }} bash -c '{{ db_create_command }}'"
+    chdir: '{{ docker_directory_path }}'
 
 - name: Import database
   ansible.builtin.shell:
-    chdir: '{{ docker_directory_path }}'
     cmd: "{{ docker_command }} exec -T {{ db_service }} bash -c '{{ db_command }}' < {{ db_dump_filename }}"
+    chdir: '{{ docker_directory_path }}'
