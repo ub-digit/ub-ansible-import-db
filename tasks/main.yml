@@ -66,12 +66,12 @@
     db_create_command: "mysql -u {{ db_user }} -p{{ db_password }} -e \"CREATE DATABASE $MYSQL_DATABASE;\""
   when: database_variant == 'mysql'
 
-- name: Wait for DB container to be healthy
+- name: Wait for database service to be healthy
   ansible.builtin.shell: |
     docker inspect --format='{% raw %}{{ .State.Health.Status }}{% endraw %}' {{ db_service_id.stdout }}
   register: health
   until: health.stdout == "healthy"
-  retries: 3
+  retries: 10
   delay: 2
   changed_when: false
 
