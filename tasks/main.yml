@@ -36,12 +36,12 @@
     src: "{{ [playbook_dir, 'data', db_dump_filename] | path_join }}"
     dest: "{{ [docker_directory_path, db_dump_filename] | path_join }}"
 
-- name: Set mysql database command
+- name: Set postgres database command
   ansible.builtin.set_fact:
     db_command: "psql -U {{ db_user }} -d {{ db_name }}"
   when: database_variant == 'postgres'
 
-- name: Set postgres database command
+- name: Set mysql database command
   ansible.builtin.set_fact:
     db_command: "mysql -u {{ db_user }} -p{{ db_password }} {{ db_name }}"
   when: database_variant == 'mysql'
