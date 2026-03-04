@@ -1,9 +1,4 @@
 ---
-
-- name: Debugwtf
-  debug:
-    var: database_variant
-
 - name: Ensure database service is started
   ansible.builtin.command: "{{ docker_command }} up {{ db_service }} -d"
   args:
