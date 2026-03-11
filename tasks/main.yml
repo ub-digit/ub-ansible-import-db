@@ -1,6 +1,11 @@
 ---
+- name: Ensure all services are stopped
+  ansible.builtin.command: "{{ docker_command }} stop"
+  args:
+    chdir: '{{ docker_directory_path }}'
+
 - name: Ensure database service is started
-  ansible.builtin.command: "{{ docker_command }} up {{ db_service }} -d"
+  ansible.builtin.command: "{{ docker_command }} start {{ db_service }}"
   args:
     chdir: '{{ docker_directory_path }}'
 
@@ -89,4 +94,9 @@
 - name: Import database
   ansible.builtin.shell:
     cmd: "{{ docker_command }} exec -T {{ db_service }} bash -c '{{ db_command }}' < {{ db_dump_filename }}"
+    chdir: '{{ docker_directory_path }}'
+
+- name: Ensure all services are started
+  ansible.builtin.command: "{{ docker_command }} start"
+  args:
     chdir: '{{ docker_directory_path }}'
