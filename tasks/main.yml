@@ -5,7 +5,7 @@
     chdir: '{{ docker_directory_path }}'
 
 - name: Ensure database service is started
-  ansible.builtin.command: "{{ docker_command }} start {{ db_service }}"
+  ansible.builtin.command: "{{ docker_command }} up {{ db_service }} -d"
   args:
     chdir: '{{ docker_directory_path }}'
 
