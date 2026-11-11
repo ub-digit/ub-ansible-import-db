@@ -37,7 +37,7 @@
     db_password: "{{ db_password | default(default_database_vars.db_password) }}"
   when: database_variant == 'mysql'
 
-- name: Upload database
+- name: Copy database
   ansible.builtin.copy:
     src: "{{ [playbook_dir, 'data', db_dump_filename] | path_join }}"
     dest: "{{ [docker_directory_path, db_dump_filename] | path_join }}"
@@ -96,7 +96,7 @@
     cmd: "{{ docker_command }} exec -T {{ db_service }} bash -c '{{ db_command }}' < {{ db_dump_filename }}"
     chdir: '{{ docker_directory_path }}'
 
-- name: Ensure all services are started
-  ansible.builtin.command: "{{ docker_command }} start"
+- name: Ensure all services are up
+  ansible.builtin.command: "{{ docker_command }} up -d"
   args:
     chdir: '{{ docker_directory_path }}'
